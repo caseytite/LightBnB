@@ -174,8 +174,6 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function (property) {
-  console.log('at begining', property);
-
   return pool
     .query(
       `INSERT INTO properties (title,description,number_of_bedrooms,number_of_bathrooms,parking_spaces,cost_per_night,thumbnail_photo_url,cover_photo_url,street,country,city,province,post_code,owner_id)
@@ -197,7 +195,7 @@ const addProperty = function (property) {
         property.owner_id,
       ]
     )
-    .then((result) => console.log('in then', result.rows))
+    .then((result) => result.rows)
     .catch((err) => console.log('error', err.message));
 };
 exports.addProperty = addProperty;
