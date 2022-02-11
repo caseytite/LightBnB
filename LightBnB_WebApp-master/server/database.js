@@ -22,7 +22,7 @@ const getUserWithEmail = function (email) {
       `SELECT * FROM users
   WHERE email = $1
   ;`,
-      [email]
+      [email.toLowerCase()]
     )
     .then((result) => result.rows[0])
     .catch((err) => console.log('error message', err.message));
@@ -63,7 +63,7 @@ const addUser = function (user) {
   VALUES ($1,$2,$3)
   RETURNING * ;
   `,
-      [userName, userEmail, userPassword]
+      [userName, userEmail.toLowerCase(), userPassword]
     )
     .then((result) => result)
     .catch((err) => console.log('error message', err.message));
@@ -138,26 +138,29 @@ const getAllProperties = (options, limit = 10) => {
   }
 
   //----------------------------------------SELECTS COST PER NIGHT
-  if (options.minimum_price_per_night && options.maximum_price_per_night) {
+  if (options.minimum_price_per_night) {
     queryParams.push(options.minimum_price_per_night * 100);
-
-    queryParams.push(options.maximum_price_per_night * 100);
-
-    queryString += `AND properties.cost_per_night < $${queryParams.length} 
-    AND properties.cost_per_night > $${queryParams.length - 1} `;
+    queryString += `AND properties.cost_per_night > $${queryParams.length} `;
   }
+
+  if (options.maximum_price_per_night) {
+    queryParams.push(options.maximum_price_per_night * 100);
+    queryString += `AND properties.cost_per_night < $${queryParams.length} `;
+  }
+
+  queryString += `GROUP BY properties.id
+  `;
 
   //---------------------------------------SELECTS RATING
   if (options.minimum_rating) {
     queryParams.push(options.minimum_rating);
-    queryString += `AND property_reviews.rating >= $${queryParams.length} `;
+    queryString += `HAVING avg(rating) >= $${queryParams.length} `;
   }
 
   //----------------------------------------SELECTS LIMIT
   queryParams.push(limit);
   queryString += `
-  GROUP BY properties.id
-  ORDER BY cost_per_night
+  ORDER BY cost_per_night 
   LIMIT $${queryParams.length};
   `;
 
@@ -195,7 +198,7 @@ const addProperty = function (property) {
         property.owner_id,
       ]
     )
-    .then((result) => result.rows)
+    .then((result) => console.log(result.rows))
     .catch((err) => console.log('error', err.message));
 };
 exports.addProperty = addProperty;
