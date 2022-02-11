@@ -55,7 +55,6 @@ const addUser = function (user) {
   let userName = user.name;
   let userEmail = user.email;
   let userPassword = user.password;
-  console.log(userName, userEmail, userPassword);
 
   return pool
     .query(
@@ -133,19 +132,19 @@ const getAllProperties = (options, limit = 10) => {
 
   //-----------------------------------------SELECTS CITY
   if (options.city) {
-    queryParams.push(`%${options.city}%`);
+    queryParams.push(`%${options.city.slice(1)}%`);
     queryString += `WHERE city LIKE $${queryParams.length} `;
   }
 
   //----------------------------------------SELECTS COST PER NIGHT
   if (options.minimum_price_per_night) {
     queryParams.push(options.minimum_price_per_night * 100);
-    queryString += `AND properties.cost_per_night > $${queryParams.length} `;
+    queryString += `AND properties.cost_per_night >= $${queryParams.length} `;
   }
 
   if (options.maximum_price_per_night) {
     queryParams.push(options.maximum_price_per_night * 100);
-    queryString += `AND properties.cost_per_night < $${queryParams.length} `;
+    queryString += `AND properties.cost_per_night <= $${queryParams.length} `;
   }
 
   queryString += `GROUP BY properties.id
@@ -177,6 +176,9 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function (property) {
+  if (Object.values(property).includes('')) {
+    return;
+  }
   return pool
     .query(
       `INSERT INTO properties (title,description,number_of_bedrooms,number_of_bathrooms,parking_spaces,cost_per_night,thumbnail_photo_url,cover_photo_url,street,country,city,province,post_code,owner_id)
